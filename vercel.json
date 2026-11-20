@@ -8,6 +8,14 @@
   ],
   "routes": [
     {
+      "src": "/(styles\\.css|script\\.js|healmeal-heart\\.svg|favicon\\.png|privacy\\.html|terms\\.html)$",
+      "dest": "/$1"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/server.js"
+    },
+    {
       "src": "/(.*)",
       "dest": "/server.js"
     }
