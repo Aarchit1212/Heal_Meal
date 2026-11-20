@@ -175,38 +175,42 @@
                 <button class="btn-primary" id="addMedBtn">
                     <i class="fas fa-plus"></i> Add Medication
                 </button>
-                <button class="btn-secondary" id="setReminderBtn">
-                    <i class="fas fa-bell"></i> Set Reminder
+                <button class="btn-secondary" id="removeMedBtn" disabled>
+                    <i class="fas fa-trash"></i> Remove Medication
                 </button>
             </div>
-            <div class="medication-list" id="medicationList">
-                <div class="medication-item">
-                    <div class="med-info">
-                        <h4>Metformin</h4>
-                        <p>500mg - Twice daily with meals</p>
-                    </div>
-                    <div class="med-status">Next dose: 2:00 PM</div>
-                    <button class="med-check"><i class="fas fa-check"></i></button>
-                </div>
-                <div class="medication-item">
-                    <div class="med-info">
-                        <h4>Lisinopril</h4>
-                        <p>10mg - Once daily in morning</p>
-                    </div>
-                    <div class="med-status taken">Taken ✓</div>
-                    <button class="med-check"><i class="fas fa-check"></i></button>
-                </div>
-                <div class="medication-item">
-                    <div class="med-info">
-                        <h4>Vitamin D3</h4>
-                        <p>1000 IU - Once daily</p>
-                    </div>
-                    <div class="med-status">Next dose: 8:00 AM</div>
-                    <button class="med-check"><i class="fas fa-check"></i></button>
-                </div>
+            <p class="medication-note">Reminders are stored on this device and sound only while this page is open.</p>
+            <div class="medication-list" id="medicationList" aria-live="polite">
+                <p class="medication-empty">No medications added yet. Choose “Add Medication” to create a reminder.</p>
             </div>
         </div>
     </section>
+
+    <dialog class="medication-dialog" id="medicationDialog" aria-labelledby="medDialogTitle">
+        <form id="medicationForm" class="medication-form">
+            <div class="medication-dialog-header">
+                <div><p class="eyebrow">PERSONAL REMINDER</p><h2 id="medDialogTitle">Add medication</h2></div>
+                <button class="dialog-close" type="button" id="closeMedDialog" aria-label="Close">&times;</button>
+            </div>
+            <label for="medicationName">Medication name</label>
+            <input id="medicationName" name="name" type="text" maxlength="80" required autocomplete="off" placeholder="e.g., Vitamin D" />
+            <label for="medicationTime">Reminder time</label>
+            <input id="medicationTime" name="time" type="time" required />
+            <label for="medicationDescription">Short note <span>(up to 15 words)</span></label>
+            <textarea id="medicationDescription" name="description" rows="2" maxlength="150" placeholder="e.g., Take with breakfast"></textarea>
+            <label for="medicationSound">Alarm sound</label>
+            <select id="medicationSound" name="sound">
+                <option value="gentle">Gentle chime</option>
+                <option value="classic">Classic beeps</option>
+                <option value="pulse">Soft pulse</option>
+            </select>
+            <p class="medication-form-error" id="medicationFormError" role="alert"></p>
+            <div class="medication-form-actions">
+                <button class="btn-secondary" type="button" id="cancelMedDialog">Cancel</button>
+                <button class="btn-primary" type="submit">Save reminder</button>
+            </div>
+        </form>
+    </dialog>
 
     <!-- Tools Section -->
     <section id="tools" class="section tools">
