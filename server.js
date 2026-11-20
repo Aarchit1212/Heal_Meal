@@ -5,7 +5,7 @@ const rateLimit = require("express-rate-limit");
 const path = require("path");
 
 const app = express();
-const port = Number(process.env.PORT) || 3000;
+const port = Number(process.env.PORT) || 8080;
 const model = process.env.GROQ_MODEL || "openai/gpt-oss-120b";
 app.disable("x-powered-by");
 app.use(helmet({ contentSecurityPolicy: false }));
