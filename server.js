@@ -11,6 +11,7 @@ app.disable("x-powered-by");
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.json({ limit: "20kb" }));
 app.use("/api", rateLimit({ windowMs: 60_000, limit: 30, standardHeaders: "draft-7", legacyHeaders: false }));
+app.get("/", (_req, res) => res.sendFile(path.join(__dirname, "index.html")));
 app.use(express.static(path.join(__dirname)));
 
 app.get("/api/health", (_req, res) => res.json({ ok: true }));
