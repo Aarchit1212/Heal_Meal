@@ -217,5 +217,9 @@ app.post("/api/meal-plan", async (req, res) => {
   }
 });
 
-app.listen(port, "127.0.0.1", () => console.log(`HealMeal running at http://localhost:${port}`));
+if (require.main === module) {
+  app.listen(port, () => console.log(`HealMeal running at http://localhost:${port}`));
+}
+
+module.exports = app;
 
