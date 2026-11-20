@@ -638,14 +638,6 @@ class HealthCompanion {
         toolMenuItems.forEach(item => item.addEventListener("click", () => showTool(item.dataset.tool)));
         if (toolPanel) showTool("bmi");
 
-        // Demo button
-        const demoBtn = document.getElementById('demoBtn');
-        if (demoBtn) {
-            demoBtn.addEventListener('click', () => {
-                this.runDemo();
-            });
-        }
-
         // Voice toggle in navbar
         const voiceToggle = document.getElementById('voiceToggle');
         if (voiceToggle) {
@@ -657,31 +649,6 @@ class HealthCompanion {
         }
     }
 
-    // ============================================
-    // DEMO MODE
-    // ============================================
-
-    runDemo() {
-        const demos = [
-            "Let me show you what I can do!",
-            "Ask me any health question and I'll give you a personalized answer.",
-            "You can ask me follow up questions in this conversation.",
-            "I speak responses using your browser's built in speech voice.",
-            "Try asking me about meal planning, nutrition, or medications!",
-            "What would you like to know about today?"
-        ];
-        
-        let index = 0;
-        const showNext = () => {
-            if (index < demos.length) {
-                this.addMessage('assistant', demos[index]);
-                this.rime.speak(demos[index]);
-                index++;
-                setTimeout(showNext, 2500);
-            }
-        };
-        showNext();
-    }
 }
 
 // ============================================
