@@ -1159,3 +1159,8 @@ footer .container {
 .medication-form-error { min-height: 1.2em; color: var(--danger); font-size: .85rem; margin: 0; }
 .medication-form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; }
 .medication-form-actions button { justify-content: center; min-height: 46px; padding: 10px 18px; }
+.medication-sound-control { display: grid; grid-template-columns: minmax(0, 1fr) 48px; gap: 8px; align-items: center; }
+.medication-sound-control select { min-width: 0; }
+.sound-preview-button { display: grid; place-items: center; width: 48px; height: 48px; border: 1px solid #cbd5e1; border-radius: 10px; background: #f8fafc; color: var(--primary); font-size: 1.1rem; cursor: pointer; transition: var(--transition); }
+.sound-preview-button:hover { background: #eff6ff; border-color: var(--primary); }
+.sound-preview-button:focus-visible { outline: 3px solid rgba(37, 99, 235, .25); outline-offset: 2px; }

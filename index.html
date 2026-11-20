@@ -199,11 +199,16 @@
             <label for="medicationDescription">Short note <span>(up to 15 words)</span></label>
             <textarea id="medicationDescription" name="description" rows="2" maxlength="150" placeholder="e.g., Take with breakfast"></textarea>
             <label for="medicationSound">Alarm sound</label>
-            <select id="medicationSound" name="sound">
-                <option value="gentle">Gentle chime</option>
-                <option value="classic">Classic beeps</option>
-                <option value="pulse">Soft pulse</option>
-            </select>
+            <div class="medication-sound-control">
+                <select id="medicationSound" name="sound">
+                    <option value="gentle">Gentle chime</option>
+                    <option value="classic">Classic beeps</option>
+                    <option value="pulse">Soft pulse</option>
+                </select>
+                <button class="sound-preview-button" id="previewMedicationSound" type="button" aria-label="Preview selected alarm sound" title="Preview selected alarm sound">
+                    <i class="fas fa-volume-high" aria-hidden="true"></i>
+                </button>
+            </div>
             <p class="medication-form-error" id="medicationFormError" role="alert"></p>
             <div class="medication-form-actions">
                 <button class="btn-secondary" type="button" id="cancelMedDialog">Cancel</button>

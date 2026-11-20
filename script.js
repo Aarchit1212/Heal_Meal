@@ -489,6 +489,9 @@ class HealthCompanion {
         });
         document.getElementById("closeMedDialog")?.addEventListener("click", close);
         document.getElementById("cancelMedDialog")?.addEventListener("click", close);
+        document.getElementById("previewMedicationSound")?.addEventListener("click", () => {
+            this.playMedicationAlarm(document.getElementById("medicationSound")?.value || "gentle");
+        });
         description?.addEventListener("input", () => {
             if (error) error.textContent = countWords(description.value) > 15 ? "Keep the note to 15 words or fewer." : "";
         });
