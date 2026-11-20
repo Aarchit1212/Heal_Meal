@@ -1,51 +1,69 @@
 # HealMeal
 
-## ElevenLabs AI voice
+HealMeal is a voice-enabled health information and nutrition demo for an Indian audience. It combines a responsive web app with a Node.js and Express backend, Groq-powered chat and meal ideas, and optional ElevenLabs text-to-speech.
 
-HealMeal can speak replies with an ElevenLabs voice. Add your ElevenLabs API key and the ID of the voice you selected in the ElevenLabs Voice Library to `.env`:
+## Features
 
-```env
-ELEVENLABS_API_KEY=your_key_here
-ELEVENLABS_VOICE_ID=your_voice_id_here
-ELEVENLABS_MODEL=eleven_multilingual_v2
-```
-
-The key stays on the server. If the key or voice ID is absent, or the service is unavailable, HealMeal falls back to the device's built-in voice.
-
-A voice enabled health information demo with a Node.js/Express backend and Groq API integration. The browser handles speech recognition (when supported) and speech synthesis; the backend keeps the Groq key out of frontend code.
+- AI health-information chat and meal-plan ideas through the Groq API.
+- Practical Indian meal suggestions featuring affordable, familiar foods and seasonal produce.
+- Ten health calculators: BMI, calorie, TDEE, calorie deficit, body fat, macro, protein, water intake, weight loss, and BMR.
+- Optional ElevenLabs speech output with the browser's built-in voice as a fallback.
+- Browser speech recognition where supported; typed questions remain available.
+- Health-reference links selected by the server, including ICMR–NIN, FSSAI, and NCDC resources.
+- API input-size and request-rate limits, plus security headers.
 
 ## Requirements
 
 - Node.js 20 or newer
-- A Groq API key from [Groq Console](https://console.groq.com/keys)
+- npm
+- A Groq API key for AI chat and meal-plan features
+- An ElevenLabs API key and voice ID for ElevenLabs speech (optional)
 
 ## Run locally
 
-1. Open a terminal in this project folder.
-2. Install the server dependencies: `npm install`
-3. Copy `.env.example` to `.env` and add your key to `GROQ_API_KEY`.
-4. Start the app with `npm start`.
-5. Open [http://localhost:3000](http://localhost:3000). Use this address so the browser can reach `/api/chat`.
+Open PowerShell in the project folder and run:
 
-The model can be changed with `GROQ_MODEL` in `.env`. The default is `openai/gpt-oss-120b`. Check your Groq account's current model availability and limits in Groq Console.
+```powershell
+npm install
+Copy-Item .env.example .env
+```
 
-## Backend endpoints
+Edit `.env` and add your private API keys. Then start the app:
 
-- `GET /api/health` confirms the server is running.
-- `POST /api/chat` accepts `{ "question": "...", "history": [] }` and returns `{ "answer": "..." }`.
-- `POST /api/meal-plan` creates four meal ideas and condition-specific nutrition notes from a free-text health concern or goal. Meal ideas are designed for an Indian audience, favouring practical, affordable, locally available foods and familiar home cooking. Macro values are approximate estimates, not measured nutrition data.
+```powershell
+npm start
+```
 
-The server validates input, limits request size and rate, and sends prompts to Groq using the server-side key. Conversation history is kept in this browser's local storage. This version does not use Qdrant: the old implementation generated random vectors, which cannot provide meaningful retrieval.
+Open the address printed in the terminal. With the supplied `.env.example`, that is [http://localhost:3000](http://localhost:3000). If you change `PORT`, use the corresponding port instead. Keep the terminal open while using the local app; press `Ctrl+C` there to stop the server.
 
-## Voice
+## Environment variables
 
-Speech output uses the browser's built in Web Speech synthesis. Speech input uses Web Speech recognition where available; typed questions remain supported. Voice availability and quality depend on the browser and installed voices.
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `GROQ_API_KEY` | For AI features | Private Groq API key used by chat and meal-plan requests. |
+| `GROQ_MODEL` | No | Groq model name. Defaults to `openai/gpt-oss-120b`; availability depends on your Groq account. |
+| `ELEVENLABS_API_KEY` | For ElevenLabs voice | Private ElevenLabs API key. |
+| `ELEVENLABS_VOICE_ID` | For ElevenLabs voice | ID of the ElevenLabs voice to use. |
+| `ELEVENLABS_MODEL` | No | ElevenLabs speech model. Defaults to `eleven_multilingual_v2`. |
+| `PORT` | No | Local server port. Defaults to `3000`; Vercel provides its own runtime port. |
 
-## Important
+Never commit `.env` or put API keys in browser code. `.gitignore` excludes `.env`. For deployment, add the variables in the hosting provider's environment-variable settings. On Vercel, add them under **Project Settings → Environment Variables**, then redeploy so the server functions receive them. The deployed backend runs on Vercel; you do not need to start a local Command Prompt server to use the deployed site.
 
-This is a health information demo, not a medical device or a substitute for a licensed clinician. Meal suggestions are general information, not treatment; estimated macros can vary by ingredients and portions. The app does not identify nutrient deficiencies or prescribe supplements. People with allergies, kidney disease, pregnancy, medication interactions, or multiple conditions should get individualized clinician or dietitian advice. Do not use it for emergencies or diagnosis. Keep your Groq API key private in `.env`; do not place it in frontend code.
+If ElevenLabs credentials are missing or its service is unavailable, speech output falls back to the device's built-in browser voice. Browser speech recognition depends on browser support and permissions.
+
+## API endpoints
+
+- `GET /api/health` — reports whether the backend is responding.
+- `POST /api/chat` — accepts `{ "question": "...", "history": [] }` and returns `{ "answer": "..." }`.
+- `POST /api/meal-plan` — accepts a free-text health concern or nutrition goal and returns four general meal ideas, approximate nutrition estimates, and relevant references.
+- `POST /api/voice` — accepts `{ "text": "..." }` and returns generated audio when ElevenLabs is configured.
+
+Conversation history is stored in the browser's local storage. The app does not use Qdrant or retrieval-augmented generation.
+
+## Health and nutrition notice
+
+HealMeal provides general educational information. It is not a medical device, diagnosis, treatment, or prescription, and its calculator outputs and meal nutrition estimates are approximate. It does not identify nutrient deficiencies or prescribe supplements. People with allergies, kidney disease, pregnancy, medication interactions, or multiple health conditions should seek individualized advice from a licensed clinician or registered dietitian. Do not use the app for emergencies.
 
 ## Meal-plan references
 
-Meal-plan reference links are selected on the server, not supplied by the model. The default sources are the [ICMR–National Institute of Nutrition Dietary Guidelines for Indians (2024)](https://nin.res.in/dietaryguidelines/pdfjs/locale/DGI_2024.pdf) and [FSSAI Eat Right India](https://fssai.gov.in/eat-right-india). Diabetes, hypertension and obesity use topic-specific National Centre for Disease Control (India) resources. For specialised topics without an equivalent Indian public resource in the app, an additional international government source is retained; unrecognised topics also receive a MedlinePlus search link.
-
+Reference links are selected by the server rather than generated by the model. Sources include the [ICMR–National Institute of Nutrition Dietary Guidelines for Indians (2024)](https://nin.res.in/dietaryguidelines/pdfjs/locale/DGI_2024.pdf), [FSSAI Eat Right India](https://fssai.gov.in/eat-right-india), and topic-specific National Centre for Disease Control resources. Some specialised topics may also link to international government health information; unrecognised topics receive a MedlinePlus search link.
