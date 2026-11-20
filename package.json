@@ -1,6 +1,10 @@
 {
-  "name": "healmeal",
+ "name": "healmeal",
   "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
   "private": true,
   "description": "HealMeal with a secure Groq API backend",
   "scripts": { "start": "node server.js" },
