@@ -660,6 +660,24 @@ class HealthCompanion {
             });
         }
 
+        const guideMeBtn = document.getElementById('guideMeBtn');
+        if (guideMeBtn) {
+            const guideLines = [
+                "Let me show what I can do.",
+                "Ask me any health question.",
+                "I'm here to help you personally.",
+                "Let's explore your nutrition goals.",
+                "Get practical meal ideas with me."
+            ];
+            guideMeBtn.addEventListener('click', () => {
+                const section = document.querySelector('.voice-consultation');
+                if (section) section.scrollIntoView({ behavior: 'smooth' });
+                const line = guideLines[Math.floor(Math.random() * guideLines.length)];
+                this.addMessage('assistant', line);
+                this.rime.speak(line);
+            });
+        }
+
         const mealBtn = document.getElementById("generateMealBtn");
         if (mealBtn) {
             mealBtn.addEventListener("click", () => {
