@@ -158,8 +158,6 @@ class HealthCompanion {
     constructor() {
         this.rime = new SpeechOutput();
         this.voice = new VoiceManager();
-        this.userId = localStorage.getItem("healthvoice_user_id") || `user_${crypto.randomUUID()}`;
-        localStorage.setItem("healthvoice_user_id", this.userId);
         this.conversationHistory = JSON.parse(localStorage.getItem("healthvoice_history") || "[]");
         this.medications = JSON.parse(localStorage.getItem("healmeal_medications") || "[]");
         this.alarmTimer = null;
@@ -168,6 +166,7 @@ class HealthCompanion {
             if (input) input.value = transcript;
         };
         this.setupEventListeners();
+        this.restoreConversationHistory();
     }
 
     async init() {
@@ -302,32 +301,6 @@ class HealthCompanion {
         }
     }
 
-    detectCondition(query) {
-        const conditions = ['diabetes', 'hypertension', 'heart disease', 'obesity', 'anemia', 
-                           'asthma', 'arthritis', 'depression', 'anxiety', 'migraine'];
-        const lower = query.toLowerCase();
-        for (const condition of conditions) {
-            if (lower.includes(condition)) {
-                return condition;
-            }
-        }
-        return 'general';
-    }
-
-    extractTags(query) {
-        const tags = [];
-        const keywords = ['meal', 'diet', 'nutrition', 'vitamin', 'exercise', 'sleep', 
-                         'stress', 'weight', 'blood pressure', 'sugar', 'cholesterol'];
-        const lower = query.toLowerCase();
-        for (const keyword of keywords) {
-            if (lower.includes(keyword)) {
-                tags.push(keyword);
-            }
-        }
-        return tags;
-    }
-
-
     // ============================================
     // UI HELPERS
     // ============================================
@@ -367,6 +340,17 @@ class HealthCompanion {
         
         conversationArea.appendChild(messageDiv);
         conversationArea.scrollTop = conversationArea.scrollHeight;
+    }
+
+    restoreConversationHistory() {
+        const conversationArea = document.getElementById("conversationArea");
+        if (!conversationArea || !Array.isArray(this.conversationHistory)) return;
+        const messages = this.conversationHistory.filter(message =>
+            message && ["user", "assistant"].includes(message.role) && typeof message.content === "string"
+        );
+        if (!messages.length) return;
+        conversationArea.replaceChildren();
+        for (const message of messages) this.addMessage(message.role, message.content);
     }
 
     // Render the small, useful Markdown subset returned by the assistant with DOM
@@ -716,14 +700,7 @@ class HealthCompanion {
             macro: () => `${toolHeader("fa-chart-pie", "Macro Calculator", "Estimate a balanced macro split from your age, gender, measurements, and activity.")}<div class="tool-form">${field("macroAge", "Age", "years")}${field("macroWeight", "Weight", "kg")}${field("macroHeight", "Height", "cm")}<div class="tool-field"><label for="macroSex">Gender</label><select id="macroSex"><option value="female">Female</option><option value="male">Male</option></select></div><div class="tool-field"><label for="macroActivity">Activity level</label><select id="macroActivity"><option value="1.2">Sedentary</option><option value="1.375">Lightly active</option><option value="1.55">Moderately active</option><option value="1.725">Very active</option></select></div><button class="btn-primary tool-action" type="button" data-action="macro">Calculate macros</button></div>${resultBox("toolResult", "Complete the fields for an illustrative daily macro estimate.")}<p class="tool-note">Macro targets should be individualised for medical conditions and pregnancy.</p>`,
             protein: () => `${toolHeader("fa-drumstick-bite", "Protein Calculator", "Estimate a general daily protein range from weight and activity.")}<div class="tool-form">${field("proteinWeight", "Weight", "kg")}<div class="tool-field"><label for="proteinActivity">Activity level</label><select id="proteinActivity"><option value="0.8">Mostly sedentary</option><option value="1.0">Regular activity</option><option value="1.2">Frequent training</option></select></div><button class="btn-primary tool-action" type="button" data-action="protein">Calculate protein</button></div>${resultBox("toolResult", "Enter your weight and activity level.")}<p class="tool-note">People with kidney disease or other medical conditions should seek personal advice before changing protein intake.</p>`,
             weightloss: () => `${toolHeader("fa-scale-balanced", "Weight Loss Calculator", "Estimate the calorie gap associated with a chosen weight-loss pace.")}<div class="tool-form">${field("wlAge", "Age", "years")}${field("wlWeight", "Current weight", "kg")}${field("wlHeight", "Height", "cm")}<div class="tool-field"><label for="wlSex">Gender</label><select id="wlSex"><option value="female">Female</option><option value="male">Male</option></select></div><div class="tool-field"><label for="wlActivity">Activity level</label><select id="wlActivity"><option value="1.2">Sedentary</option><option value="1.375">Lightly active</option><option value="1.55">Moderately active</option><option value="1.725">Very active</option></select></div><div class="tool-field"><label for="wlPace">Preferred pace</label><select id="wlPace"><option value="0.25">0.25 kg/week</option><option value="0.5">0.5 kg/week</option></select></div><button class="btn-primary tool-action" type="button" data-action="weightloss">Estimate plan</button></div>${resultBox("toolResult", "Complete the fields for a general estimate.")}<p class="tool-note">Sustainable progress varies. Do not use this tool for children, pregnancy, eating disorders, or unintentional weight loss.</p>`,
-            waist: () => `${toolHeader("fa-ruler-horizontal", "Waist-to-Height", "A simple screening ratio using the same unit for both measurements.")}<div class="tool-form">${field("waist", "Waist circumference", "cm")}${field("waistHeight", "Height", "cm")}<button class="btn-primary tool-action" type="button" data-action="waist">Check ratio</button></div>${resultBox("toolResult", "Enter your measurements to calculate the ratio.")}<p class="tool-note">This is general information and does not diagnose disease.</p>`,
             water: () => `${toolHeader("fa-glass-water", "Water Intake Calculator", "A general daily-fluid reminder based on body weight.")}<div class="tool-form">${field("waterWeight", "Weight", "kg")}<button class="btn-primary tool-action" type="button" data-action="water">Calculate water intake</button></div>${resultBox("toolResult", "Enter your weight for a general reminder.")}<p class="tool-note">Fluid needs can change with climate, exercise, kidney or heart conditions, pregnancy, and medicines. Follow your clinician’s guidance if you have a fluid limit.</p>`,
-            heart: () => `${toolHeader("fa-heart-pulse", "Heart Rate Zones", "A general age-based maximum heart-rate estimate.")}<div class="tool-form">${field("heartAge", "Age", "years")}<button class="btn-primary tool-action" type="button" data-action="heart">Show zones</button></div>${resultBox("toolResult", "Enter your age to view general exercise ranges.")}<p class="tool-note">Stop exercise and seek medical advice for chest pain, fainting, or severe breathlessness. Ask a clinician before starting a new programme.</p>`,
-            sleep: () => `${toolHeader("fa-moon", "Sleep Duration", "Check the time between bedtime and wake-up time.")}<div class="tool-form">${field("bedtime", "Bedtime", "", "time")}${field("wakeTime", "Wake-up time", "", "time")}<button class="btn-primary tool-action" type="button" data-action="sleep">Calculate sleep</button></div>${resultBox("toolResult", "Add a bedtime and wake-up time.")}`,
-            pregnancy: () => `${toolHeader("fa-calendar-days", "Due-Date Estimate", "Estimate from the first day of the last menstrual period.")}<div class="tool-form">${field("lmp", "First day of last period", "", "date")}<button class="btn-primary tool-action" type="button" data-action="pregnancy">Estimate date</button></div>${resultBox("toolResult", "Add a date to see an estimate.")}<p class="tool-note">This is only an estimate. Confirm dates and care plans with your maternity clinician.</p>`,
-            bp: () => `${toolHeader("fa-stethoscope", "Blood Pressure Log", "Record a reading for your personal notes; this tool does not diagnose.")}<div class="tool-form">${field("systolic", "Systolic", "mmHg")}${field("diastolic", "Diastolic", "mmHg")}<button class="btn-primary tool-action" type="button" data-action="bp">Save reading</button></div>${resultBox("toolResult", "Enter a reading to format it for your notes.")}<p class="tool-note">A very high reading with symptoms such as chest pain, weakness, confusion, or severe headache needs urgent medical care.</p>`,
-            medication: () => `${toolHeader("fa-bell", "Medication Reminder", "Create a reminder note for this browser session.")}<div class="tool-form"><div class="tool-field"><label for="medName">Medication name</label><input id="medName" type="text" maxlength="80" /></div>${field("medTime", "Time", "", "time")}<button class="btn-primary tool-action" type="button" data-action="medication">Set reminder</button></div>${resultBox("toolResult", "Add a name and time. This is not a persistent alarm or medical instruction.")}`,
-            plate: () => `${toolHeader("fa-utensils", "Healthy Plate Guide", "A practical visual guide to balanced everyday meals.")}<div class="tool-guide"><div><strong>½ vegetables</strong>Choose a variety of seasonal vegetables and fruit.</div><div><strong>¼ protein foods</strong>Use dal, beans, curd, eggs, fish, or other suitable protein foods.</div><div><strong>¼ grains</strong>Choose familiar staples such as roti, rice, millets, or other whole grains where possible.</div></div><p class="tool-note">Adapt this general guide for allergies, kidney disease, pregnancy, diabetes, and other conditions with a registered dietitian or clinician.</p>`
         };
 
         const showTool = (tool) => {
@@ -799,13 +776,7 @@ class HealthCompanion {
                 if (!(weight > 0 && multiplier > 0)) return void (result.textContent = "Please enter a valid weight and activity level.");
                 result.innerHTML = `<strong>General protein estimate: ${Math.round(weight * multiplier)} g/day</strong><br>Based on ${multiplier} g per kg of body weight.`;
             }
-            if (action === "waist") { const ratio = number("waist") / number("waistHeight"); result.innerHTML = Number.isFinite(ratio) && ratio > 0 ? `<strong>Waist-to-height ratio: ${ratio.toFixed(2)}</strong><br>A ratio below 0.5 is often used as a general screening guide.` : "Please enter valid measurements."; }
             if (action === "water") { const weight = number("waterWeight"); result.innerHTML = weight > 0 ? `<strong>General reminder: around ${(weight * 0.03).toFixed(1)} L of fluids daily</strong><br>Adjust for thirst, climate, activity, and any clinician-set fluid limits.` : "Please enter a valid weight."; }
-            if (action === "heart") { const max = 220 - number("heartAge"); result.innerHTML = max > 60 ? `<strong>Estimated maximum: ${Math.round(max)} bpm</strong><br>Light: ${Math.round(max * .5)}–${Math.round(max * .6)} bpm · Moderate: ${Math.round(max * .6)}–${Math.round(max * .75)} bpm.` : "Please enter a valid age."; }
-            if (action === "sleep") { const bedtime = document.getElementById("bedtime")?.value, wake = document.getElementById("wakeTime")?.value; if (!bedtime || !wake) return void (result.textContent = "Please choose both times."); let minutes = (new Date(`1970-01-01T${wake}`) - new Date(`1970-01-01T${bedtime}`)) / 60000; if (minutes <= 0) minutes += 1440; result.innerHTML = `<strong>Sleep window: ${Math.floor(minutes / 60)} h ${minutes % 60} min</strong><br>Adults commonly need about 7–9 hours, though needs vary.`; }
-            if (action === "pregnancy") { const value = document.getElementById("lmp")?.value; if (!value) return void (result.textContent = "Please choose a date."); const due = new Date(`${value}T00:00:00`); due.setDate(due.getDate() + 280); result.innerHTML = `<strong>Estimated due date: ${due.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}</strong><br>Please confirm this with your maternity clinician.`; }
-            if (action === "bp") { const systolic = number("systolic"), diastolic = number("diastolic"); result.innerHTML = systolic > 0 && diastolic > 0 ? `<strong>Recorded: ${Math.round(systolic)}/${Math.round(diastolic)} mmHg</strong><br>Keep this with the date, time, and how you felt for discussion with a clinician.` : "Please enter valid numbers."; }
-            if (action === "medication") { const name = document.getElementById("medName")?.value.trim(), time = document.getElementById("medTime")?.value; result.textContent = name && time ? `Reminder note: ${name} at ${time}. Keep following the instructions from your prescriber.` : "Please enter a medication name and time."; }
         });
         toolMenuItems.forEach(item => item.addEventListener("click", () => showTool(item.dataset.tool)));
         if (toolPanel) showTool("bmi");

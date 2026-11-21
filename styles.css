@@ -569,15 +569,6 @@ body {
     font-weight: 500;
 }
 
-.meal-filter select {
-    padding: 10px 16px;
-    border-radius: 8px;
-    border: 2px solid #e2e8f0;
-    font-size: 0.95rem;
-    background: var(--white);
-    font-family: inherit;
-}
-
 .meal-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -637,45 +628,6 @@ body {
     padding: 24px;
     border-radius: var(--radius);
     box-shadow: var(--shadow);
-}
-
-.nutrition-item {
-    display: grid;
-    grid-template-columns: 100px 1fr 60px;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 0;
-    border-bottom: 1px solid #f1f5f9;
-}
-
-.nutrition-item:last-child {
-    border-bottom: none;
-}
-
-.progress-bar {
-    height: 8px;
-    background: #f1f5f9;
-    border-radius: 4px;
-    overflow: hidden;
-}
-
-.progress {
-    height: 100%;
-    border-radius: 4px;
-    background: var(--gradient);
-    transition: width 1s ease;
-}
-
-.deficiency {
-    color: var(--danger);
-    font-weight: 600;
-    font-size: 0.8rem;
-}
-
-.normal {
-    color: var(--success);
-    font-weight: 600;
-    font-size: 0.8rem;
 }
 
 .nutrition-recommendations {
@@ -747,11 +699,6 @@ body {
     border-left: 4px solid var(--primary);
 }
 
-.med-info h4 {
-    font-size: 1rem;
-    margin-bottom: 2px;
-}
-
 .med-info p {
     color: var(--gray);
     font-size: 0.85rem;
@@ -763,34 +710,7 @@ body {
     color: var(--gray);
 }
 
-.med-status.taken {
-    color: var(--success);
-}
-
-.med-check {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    border: 2px solid #e2e8f0;
-    background: transparent;
-    cursor: pointer;
-    transition: var(--transition);
-    color: var(--gray);
-}
-
-.med-check:hover {
-    background: var(--success);
-    border-color: var(--success);
-    color: white;
-}
-
 /* Tools */
-.tools-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-}
-
 .tools-lead { max-width: 720px; color: var(--gray); margin: -14px 0 28px; }
 .tools-catalog { display: grid; grid-template-columns: minmax(280px, 360px) 1fr; gap: 24px; }
 .tool-menu, .tool-panel { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); }
@@ -821,49 +741,6 @@ body {
 .tool-result { margin-top: 22px; max-width: 760px; padding: 16px 18px; background: #f3f6fb; border-left: 4px solid var(--primary); border-radius: 10px; color: var(--dark); min-height: 56px; line-height: 1.55; }
 .tool-result strong { font-size: 1.08rem; }
 .tool-note { color: var(--gray); font-size: .82rem; margin: 14px 0 0; max-width: 760px; line-height: 1.55; }
-.tool-guide { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; max-width: 760px; }
-.tool-guide div { padding: 16px; border-radius: 10px; background: #f3f6fb; }
-.tool-guide strong { display: block; color: var(--primary); margin-bottom: 4px; }
-
-.tool-card {
-    background: var(--white);
-    padding: 24px;
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-}
-
-.tool-card i {
-    font-size: 2rem;
-    color: var(--primary);
-    margin-bottom: 12px;
-}
-
-.tool-card h3 {
-    font-size: 1.1rem;
-    margin-bottom: 16px;
-}
-
-.tool-inputs {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.tool-inputs input,
-.tool-inputs select {
-    padding: 10px 14px;
-    border-radius: 8px;
-    border: 2px solid #e2e8f0;
-    font-size: 0.9rem;
-    font-family: inherit;
-}
-
-.tool-inputs input:focus,
-.tool-inputs select:focus {
-    outline: none;
-    border-color: var(--primary);
-}
-
 /* Footer */
 footer {
     background: var(--dark);
@@ -954,7 +831,6 @@ footer .container {
 @media (max-width: 1024px) {
     .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
     .meal-grid { grid-template-columns: repeat(2, 1fr); }
-    .tools-grid { grid-template-columns: repeat(2, 1fr); }
     .nutrition-content { grid-template-columns: 1fr; }
 }
 
@@ -1014,19 +890,16 @@ footer .container {
     .nutrition-content { grid-template-columns: minmax(0, 1fr); gap: 14px; }
     .nutrition-chart,
     .nutrition-recommendations { padding: 18px; min-width: 0; }
-    .nutrition-item { grid-template-columns: 78px minmax(0, 1fr) 46px; gap: 8px; font-size: .82rem; }
     .medication-controls { display: grid; grid-template-columns: 1fr; gap: 10px; }
     .medication-controls button { width: 100%; justify-content: center; }
     .medication-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; padding: 16px; }
     .med-info { min-width: 0; }
-    .med-status { grid-column: 1; }
-    .med-check { grid-column: 2; grid-row: 1 / span 2; }
     .tools-catalog { gap: 14px; }
     .tool-menu { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .tool-panel { padding: 18px; }
     .tool-panel-header { gap: 10px; }
     .tool-panel-header h3 { font-size: 1.15rem; }
-    .tool-form, .tool-guide { grid-template-columns: minmax(0, 1fr); }
+    .tool-form { grid-template-columns: minmax(0, 1fr); }
     .tool-form .tool-action { width: 100%; }
 
     footer .container { flex-direction: column; align-items: flex-start; gap: 14px; }
@@ -1067,16 +940,6 @@ footer .container {
 @keyframes pulse {
     0%, 100% { transform: scale(1); }
     50% { transform: scale(1.1); }
-}
-
-/* Qdrant context indicator */
-.message .message-content .qdrant-context {
-    font-size: 0.8rem;
-    color: #64748b;
-    background: #f1f5f9;
-    padding: 4px 8px;
-    border-radius: 4px;
-    margin-top: 4px;
 }
 
 /* Dynamic condition meal plan and nutrition focus */
@@ -1129,7 +992,7 @@ footer .container {
 @media (max-width: 768px) {
     .tool-menu { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
     .tool-menu-item { font-size: .84rem; padding: 11px 9px; gap: 8px; }
-    .tool-form, .tool-guide { grid-template-columns: 1fr; }
+.tool-form { grid-template-columns: 1fr; }
     .tool-form .tool-action { width: 100%; }
 }
 
