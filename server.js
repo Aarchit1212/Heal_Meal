@@ -111,9 +111,10 @@ const trustedSources = {
     { label: "National Centre for Disease Control (India): Hypertension FAQs", url: "https://ncdc.mohfw.gov.in/wp-content/uploads/2024/11/Hypertension-English-FAQs.pdf" },
     indianDietaryGuidelines
   ],
-  heart: [
-    { label: "National Centre for Disease Control (India): Hypertension FAQs", url: "https://ncdc.mohfw.gov.in/wp-content/uploads/2024/11/Hypertension-English-FAQs.pdf" },
-    indianDietaryGuidelines
+  "heart disease": [indianDietaryGuidelines, eatRightIndia],
+  heartburn: [
+    indianDietaryGuidelines,
+    { label: "NIDDK: GER & GERD information", url: "https://www.niddk.nih.gov/health-information/digestive-diseases/acid-reflux-ger-gerd-adults" }
   ],
   obesity: [
     { label: "National Centre for Disease Control (India): Obesity FAQs", url: "https://ncdc.mohfw.gov.in/wp-content/uploads/2024/11/Obesity-English-FAQs.pdf" },

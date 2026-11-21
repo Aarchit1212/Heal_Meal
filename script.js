@@ -161,6 +161,8 @@ class HealthCompanion {
         this.conversationHistory = JSON.parse(localStorage.getItem("healthvoice_history") || "[]");
         this.medications = JSON.parse(localStorage.getItem("healmeal_medications") || "[]");
         this.alarmTimer = null;
+        this.lastAlarmCheckAt = new Date(Date.now() - 60_000);
+        this.chatQueue = Promise.resolve();
         this.voice.onResult = (transcript) => {
             const input = document.getElementById("voiceInput");
             if (input) input.value = transcript;
@@ -268,11 +270,16 @@ class HealthCompanion {
         if (disclaimer) disclaimer.textContent = plan.disclaimer;
     }
 
-    async processUserQuery(query) {
+    processUserQuery(query) {
         if (!query || !query.trim()) return;
         const cleanQuery = query.trim();
         this.addMessage("user", cleanQuery);
-        this.showTypingIndicator();
+        const typingIndicator = this.showTypingIndicator();
+        this.chatQueue = this.chatQueue.then(() => this.completeUserQuery(cleanQuery, typingIndicator));
+        return this.chatQueue;
+    }
+
+    async completeUserQuery(cleanQuery, typingIndicator) {
         try {
             const response = await fetch(`${API_BASE}/chat`, {
                 method: "POST",
@@ -289,14 +296,12 @@ class HealthCompanion {
             this.conversationHistory.push({ role: "user", content: cleanQuery }, { role: "assistant", content: answer });
             this.conversationHistory = this.conversationHistory.slice(-16);
             localStorage.setItem("healthvoice_history", JSON.stringify(this.conversationHistory));
-            this.removeTypingIndicator();
-            this.addMessage("assistant", answer);
+            this.addMessage("assistant", answer, typingIndicator);
             this.rime.speak(this.toPlainText(answer));
         } catch (error) {
             console.error("Chat request failed:", error);
-            this.removeTypingIndicator();
             const msg = error.message || "I couldn't connect to the assistant. Please try again.";
-            this.addMessage("assistant", msg);
+            this.addMessage("assistant", msg, typingIndicator);
             this.rime.speak(msg);
         }
     }
@@ -305,7 +310,7 @@ class HealthCompanion {
     // UI HELPERS
     // ============================================
 
-    addMessage(type, text) {
+    addMessage(type, text, before = null) {
         const conversationArea = document.getElementById('conversationArea');
         if (!conversationArea) return;
         
@@ -338,7 +343,8 @@ class HealthCompanion {
         messageDiv.appendChild(icon);
         messageDiv.appendChild(content);
         
-        conversationArea.appendChild(messageDiv);
+        if (before?.parentNode === conversationArea) before.replaceWith(messageDiv);
+        else conversationArea.appendChild(messageDiv);
         conversationArea.scrollTop = conversationArea.scrollHeight;
     }
 
@@ -429,7 +435,6 @@ class HealthCompanion {
         if (!conversationArea) return;
         
         const indicator = document.createElement('div');
-        indicator.id = 'typingIndicator';
         indicator.className = 'message assistant';
         indicator.innerHTML = `
             <div class="message-icon"><i class="fas fa-robot"></i></div>
@@ -439,11 +444,7 @@ class HealthCompanion {
         `;
         conversationArea.appendChild(indicator);
         conversationArea.scrollTop = conversationArea.scrollHeight;
-    }
-
-    removeTypingIndicator() {
-        const indicator = document.getElementById('typingIndicator');
-        if (indicator) indicator.remove();
+        return indicator;
     }
 
     // ============================================
@@ -512,6 +513,7 @@ class HealthCompanion {
         });
 
         this.renderMedications();
+        this.checkMedicationAlarms();
         this.alarmTimer = window.setInterval(() => this.checkMedicationAlarms(), 15_000);
     }
 
@@ -561,11 +563,16 @@ class HealthCompanion {
     }
 
     checkMedicationAlarms() {
-        if (!this.medications.length) return;
         const now = new Date();
-        const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+        const previousCheck = this.lastAlarmCheckAt;
+        this.lastAlarmCheckAt = now;
+        if (!this.medications.length) return;
         const today = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
-        const due = this.medications.filter(med => med.time === currentTime && med.lastAlertDate !== today);
+        const due = this.medications.filter(med => {
+            const [hour, minute] = med.time.split(":").map(Number);
+            const dueAt = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, minute);
+            return dueAt > previousCheck && dueAt <= now && med.lastAlertDate !== today;
+        });
         if (!due.length) return;
         for (const med of due) {
             med.lastAlertDate = today;
