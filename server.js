@@ -4,6 +4,7 @@ const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const { Redis } = require("@upstash/redis");
 const { Ratelimit } = require("@upstash/ratelimit");
+const { createApiRateLimitMiddleware, createIpFingerprint } = require("./rate-limit");
 const path = require("path");
 
 const app = express();
@@ -35,22 +36,11 @@ const sharedRateLimiter = process.env.UPSTASH_REDIS_REST_URL && process.env.UPST
   ? new Ratelimit({ redis: Redis.fromEnv(), limiter: Ratelimit.slidingWindow(30, "1 m"), prefix: "healmeal:api" })
   : null;
 
-app.use("/api", async (req, res, next) => {
-  if (!sharedRateLimiter) return localRateLimit(req, res, next);
-  try {
-    const result = await sharedRateLimiter.limit(req.ip);
-    res.set("RateLimit-Limit", String(result.limit));
-    res.set("RateLimit-Remaining", String(result.remaining));
-    if (!result.success) {
-      res.set("Retry-After", String(Math.max(1, Math.ceil((result.reset - Date.now()) / 1000))));
-      return res.status(429).json({ error: "Too many requests. Please wait a minute and try again." });
-    }
-    return next();
-  } catch (error) {
-    console.error("Shared API rate limiter unavailable:", error.message);
-    return res.status(503).json({ error: "The API is temporarily unavailable. Please try again shortly." });
-  }
-});
+app.use("/api", createApiRateLimitMiddleware({
+  sharedRateLimiter,
+  localRateLimit,
+  keyForRequest: req => createIpFingerprint(process.env.UPSTASH_REDIS_REST_TOKEN || "local-rate-limit")(req.ip)
+}));
 app.get("/", (_req, res) => res.sendFile(path.join(__dirname, "index.html")));
 app.use(express.static(path.join(__dirname)));
 

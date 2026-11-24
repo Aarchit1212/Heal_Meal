@@ -363,10 +363,19 @@ class HealthCompanion {
             this.saveMedications();
             this.renderMedications();
         });
+        document.getElementById("clearSavedDataBtn")?.addEventListener("click", () => this.clearSavedData());
 
         this.renderMedications();
         this.checkMedicationAlarms();
         this.alarmTimer = window.setInterval(() => this.checkMedicationAlarms(), 15_000);
+    }
+
+    clearSavedData() {
+        const confirmed = window.confirm("This permanently clears saved chat history and medication reminders from this browser. Continue?");
+        if (!confirmed) return;
+        localStorage.removeItem("healthvoice_history");
+        localStorage.removeItem("healmeal_medications");
+        window.location.reload();
     }
 
     saveMedications() {
