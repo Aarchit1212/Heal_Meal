@@ -5,15 +5,22 @@
   "description": "HealMeal with a secure Groq API backend",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test"
+    "test": "node --test && npm run test:browser",
+    "test:browser": "playwright test"
   },
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
+    "@upstash/ratelimit": "^2.2.2",
+    "@upstash/redis": "^1.41.1",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "express-rate-limit": "^7.5.0",
     "helmet": "^8.0.0"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.14.1",
+    "@playwright/test": "^1.65.1"
   }
 }
-
-

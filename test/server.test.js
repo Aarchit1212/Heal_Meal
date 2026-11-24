@@ -162,3 +162,17 @@ test("sets security headers and hides Express's version header", async () => {
 test("trusts one proxy hop for Vercel client IP handling", () => {
   assert.equal(app.get("trust proxy"), 1);
 });
+
+
+test("Vercel applies browser security headers before preserving API and static routes", async () => {
+  const config = JSON.parse(await readFile(require.resolve("../vercel.json"), "utf8"));
+  const headerRoute = config.routes[0];
+  assert.equal(headerRoute.src, "/(.*)");
+  assert.equal(headerRoute.continue, true);
+  assert.match(headerRoute.headers["Content-Security-Policy"], /frame-ancestors 'none'/);
+  assert.equal(headerRoute.headers["X-Content-Type-Options"], "nosniff");
+  assert.equal(config.routes[1].src, "/api/(.*)");
+  assert.equal(config.routes[1].dest, "/server.js");
+  assert.equal(config.routes[2].src, "/(.*)");
+  assert.equal(config.routes[2].dest, "/$1");
+});

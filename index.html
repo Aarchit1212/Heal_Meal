@@ -154,13 +154,13 @@
                 <div class="nutrition-chart">
                     <h3 id="nutritionSummaryTitle">Nutrition focus</h3>
                     <p id="nutritionSummary">Your nutrition analysis will appear here after you generate a meal plan.</p>
-                    <div class="nutrition-totals" id="nutritionTotals" aria-label="Approximate plan totals"></div>
+                    <div class="nutrition-totals" id="nutritionTotals" role="group" aria-label="Approximate plan totals"></div>
                     <ul class="nutrition-focus-list" id="nutritionFocus"></ul>
                 </div>
                 <div class="nutrition-recommendations">
                     <h3>Helpful foods</h3>
                     <ul class="nutrition-food-list" id="nutritionFoods"></ul>
-                    <div class="nutrition-sources" id="nutritionSources" aria-label="Nutrition guidance sources"></div>
+                    <div class="nutrition-sources" id="nutritionSources" role="group" aria-label="Nutrition guidance sources"></div>
                     <div class="food-sources">
                         <h3>Important note</h3>
                         <p id="nutritionDisclaimer">These are general meal ideas, not diagnosis or treatment. Discuss condition-specific dietary changes with your healthcare professional.</p>
@@ -256,6 +256,8 @@
         </div>
     </footer>
 
+    <script src="health-tools.js"></script>
+    <script src="voice.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

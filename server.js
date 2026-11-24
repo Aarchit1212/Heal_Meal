@@ -2,6 +2,8 @@ require("dotenv").config();
 const express = require("express");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
+const { Redis } = require("@upstash/redis");
+const { Ratelimit } = require("@upstash/ratelimit");
 const path = require("path");
 
 const app = express();
@@ -28,7 +30,27 @@ app.use(helmet({
   }
 }));
 app.use(express.json({ limit: "20kb" }));
-app.use("/api", rateLimit({ windowMs: 60_000, limit: 30, standardHeaders: "draft-7", legacyHeaders: false }));
+const localRateLimit = rateLimit({ windowMs: 60_000, limit: 30, standardHeaders: "draft-7", legacyHeaders: false });
+const sharedRateLimiter = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+  ? new Ratelimit({ redis: Redis.fromEnv(), limiter: Ratelimit.slidingWindow(30, "1 m"), prefix: "healmeal:api" })
+  : null;
+
+app.use("/api", async (req, res, next) => {
+  if (!sharedRateLimiter) return localRateLimit(req, res, next);
+  try {
+    const result = await sharedRateLimiter.limit(req.ip);
+    res.set("RateLimit-Limit", String(result.limit));
+    res.set("RateLimit-Remaining", String(result.remaining));
+    if (!result.success) {
+      res.set("Retry-After", String(Math.max(1, Math.ceil((result.reset - Date.now()) / 1000))));
+      return res.status(429).json({ error: "Too many requests. Please wait a minute and try again." });
+    }
+    return next();
+  } catch (error) {
+    console.error("Shared API rate limiter unavailable:", error.message);
+    return res.status(503).json({ error: "The API is temporarily unavailable. Please try again shortly." });
+  }
+});
 app.get("/", (_req, res) => res.sendFile(path.join(__dirname, "index.html")));
 app.use(express.static(path.join(__dirname)));
 

@@ -2,7 +2,7 @@
     --primary: #2563eb;
     --primary-dark: #1d4ed8;
     --secondary: #7c3aed;
-    --success: #22c55e;
+    --success: #15803d;
     --warning: #eab308;
     --danger: #ef4444;
     --dark: #0f172a;
@@ -348,7 +348,7 @@ body {
 
 .card-status.active {
     background: #dcfce7;
-    color: #16a34a;
+    color: #15803d;
 }
 
 .card-status.warning {
