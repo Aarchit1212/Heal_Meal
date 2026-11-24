@@ -10,8 +10,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 </head>
 <body>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
     <!-- Navigation -->
-    <nav class="navbar">
+    <nav class="navbar" aria-label="Primary navigation">
         <div class="nav-container">
             <div class="nav-logo">
                 <img class="brand-mark" src="healmeal-heart.svg" alt="" />
@@ -33,6 +34,7 @@
         </div>
     </nav>
 
+    <main id="main-content" tabindex="-1">
     <!-- Hero Section -->
     <section class="hero">
         <div class="hero-content">
@@ -69,9 +71,9 @@
             <div class="voice-area">
                 <div class="voice-header">
                     <h2><i class="fas fa-comment-medical"></i> Voice Consultation</h2>
-                    <span class="voice-status" id="voiceStatus">Ready to listen</span>
+                    <span class="voice-status" id="voiceStatus" role="status" aria-live="polite">Ready to listen</span>
                 </div>
-                <div class="voice-conversation" id="conversationArea">
+                <div class="voice-conversation" id="conversationArea" role="log" aria-label="Health assistant conversation" aria-live="polite" aria-relevant="additions text">
                     <div class="message assistant">
                         <div class="message-icon"><i class="fas fa-robot"></i></div>
                         <div class="message-content">
@@ -81,12 +83,12 @@
                     </div>
                 </div>
                 <div class="voice-controls">
-                    <button class="voice-btn" id="voiceBtn">
-                        <i class="fas fa-microphone"></i>
+                    <button class="voice-btn" id="voiceBtn" type="button" aria-label="Start voice input" aria-pressed="false" title="Start voice input">
+                        <i class="fas fa-microphone" aria-hidden="true"></i>
                     </button>
-                    <input type="text" class="voice-input" id="voiceInput" placeholder="Type your health question or click the mic to speak..." />
-                    <button class="send-btn" id="sendBtn">
-                        <i class="fas fa-paper-plane"></i>
+                    <input type="text" class="voice-input" id="voiceInput" aria-label="Type your health question" placeholder="Type your health question or click the mic to speak..." />
+                    <button class="send-btn" id="sendBtn" type="button" aria-label="Send question" title="Send question">
+                        <i class="fas fa-paper-plane" aria-hidden="true"></i>
                     </button>
                 </div>
             </div>
@@ -240,6 +242,7 @@
             </div>
         </div>
     </section>
+    </main>
 
     <!-- Footer -->
     <footer>

@@ -36,6 +36,16 @@ npm start
 
 Open the address printed in the terminal. With the supplied `.env.example`, that is [http://localhost:3000](http://localhost:3000). If you change `PORT`, use the corresponding port instead. Keep the terminal open while using the local app; press `Ctrl+C` there to stop the server.
 
+## Run checks
+
+Run the backend request and security-header checks with:
+
+```powershell
+npm test
+```
+
+The tests use Node.js's built-in test runner and do not call Groq or ElevenLabs.
+
 ## Environment variables
 
 | Variable | Required | Purpose |

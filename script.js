@@ -143,9 +143,12 @@ class VoiceManager {
         
         if (btn) {
             btn.classList.toggle('listening', isListening);
+            btn.setAttribute('aria-pressed', String(isListening));
+            btn.setAttribute('aria-label', isListening ? 'Stop voice input' : 'Start voice input');
+            btn.title = isListening ? 'Stop voice input' : 'Start voice input';
             btn.innerHTML = isListening ? 
-                '<i class="fas fa-stop"></i>' : 
-                '<i class="fas fa-microphone"></i>';
+                '<i class="fas fa-stop" aria-hidden="true"></i>' :
+                '<i class="fas fa-microphone" aria-hidden="true"></i>';
         }
     }
 }
@@ -633,8 +636,9 @@ class HealthCompanion {
         // Enter key - process text
         const voiceInput = document.getElementById('voiceInput');
         if (voiceInput) {
-            voiceInput.addEventListener('keypress', (e) => {
+            voiceInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' && voiceInput.value.trim()) {
+                    e.preventDefault();
                     this.processUserQuery(voiceInput.value.trim());
                     voiceInput.value = '';
                 }
@@ -692,7 +696,7 @@ class HealthCompanion {
                 ? `${field("bmiHeight", "Height", "cm")}${field("bmiWeight", "Weight", "kg")}`
                 : `${field("bmiFeet", "Height", "ft")}${field("bmiInches", "Height", "in")}${field("bmiPounds", "Weight", "lb")}`;
             toolPanel.innerHTML = `${toolHeader("fa-weight-scale", "BMI Calculator", "An adult body-mass-index screening tool using your preferred units.")}
-                <div class="unit-tabs" role="tablist"><button class="unit-tab ${unit === "metric" ? "active" : ""}" type="button" data-unit="metric">Metric (cm / kg)</button><button class="unit-tab ${unit === "us" ? "active" : ""}" type="button" data-unit="us">Feet & pounds</button></div>
+                <div class="unit-tabs" role="group" aria-label="Measurement units"><button class="unit-tab ${unit === "metric" ? "active" : ""}" type="button" data-unit="metric" aria-pressed="${unit === "metric"}">Metric (cm / kg)</button><button class="unit-tab ${unit === "us" ? "active" : ""}" type="button" data-unit="us" aria-pressed="${unit === "us"}">Feet & pounds</button></div>
                 <div class="tool-form">${inputs}<button class="btn-primary tool-action" type="button" data-action="bmi">Calculate BMI</button></div>
                 ${resultBox("toolResult", "Enter your height and weight to see your BMI.")}<p class="tool-note">For adults only. BMI is a screening measure, not a diagnosis, and may not reflect health for every body type, pregnancy, or condition.</p>`;
             toolPanel.querySelectorAll(".unit-tab").forEach(button => button.addEventListener("click", () => renderBmi(button.dataset.unit)));

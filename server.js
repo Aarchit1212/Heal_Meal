@@ -7,8 +7,26 @@ const path = require("path");
 const app = express();
 const port = Number(process.env.PORT) || 3000;
 const model = process.env.GROQ_MODEL || "openai/gpt-oss-120b";
+app.set("trust proxy", 1);
 app.disable("x-powered-by");
-app.use(helmet({ contentSecurityPolicy: false }));
+app.use(helmet({
+  contentSecurityPolicy: {
+    useDefaults: false,
+    directives: {
+      defaultSrc: ["'self'"],
+      baseUri: ["'self'"],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com", "data:"],
+      formAction: ["'self'"],
+      frameAncestors: ["'none'"],
+      imgSrc: ["'self'", "data:"],
+      mediaSrc: ["'self'", "blob:"],
+      objectSrc: ["'none'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"]
+    }
+  }
+}));
 app.use(express.json({ limit: "20kb" }));
 app.use("/api", rateLimit({ windowMs: 60_000, limit: 30, standardHeaders: "draft-7", legacyHeaders: false }));
 app.get("/", (_req, res) => res.sendFile(path.join(__dirname, "index.html")));
@@ -56,7 +74,7 @@ app.post("/api/chat", async (req, res) => {
     return res.status(400).json({ error: "Enter a question under 4,000 characters." });
   }
   const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) return res.status(503).json({ error: "The AI service is not configured. Add GROQ_API_KEY to .env and restart the server." });
+  if (!apiKey) return res.status(503).json({ error: "The AI service is not configured. Set GROQ_API_KEY in the server environment." });
 
   const history = Array.isArray(req.body.history) ? req.body.history.slice(-8) : [];
   const messages = [
@@ -166,7 +184,7 @@ app.post("/api/meal-plan", async (req, res) => {
     return res.status(400).json({ error: "Enter a health concern or nutrition goal under 500 characters." });
   }
   const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) return res.status(503).json({ error: "The AI service is not configured. Add GROQ_API_KEY to .env and restart the server." });
+  if (!apiKey) return res.status(503).json({ error: "The AI service is not configured. Set GROQ_API_KEY in the server environment." });
 
   const schema = {
     type: "object",
