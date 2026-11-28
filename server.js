@@ -41,6 +41,26 @@ app.use("/api", createApiRateLimitMiddleware({
   localRateLimit,
   keyForRequest: req => createIpFingerprint(process.env.UPSTASH_REDIS_REST_TOKEN || "local-rate-limit")(req.ip)
 }));
+
+function createRequestAbortController(req, res, timeoutMs) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  const abortOnDisconnect = () => {
+    if (!res.writableEnded) controller.abort();
+  };
+  req.once("aborted", abortOnDisconnect);
+  res.once("close", abortOnDisconnect);
+
+  return {
+    signal: controller.signal,
+    cleanup() {
+      clearTimeout(timeout);
+      req.removeListener("aborted", abortOnDisconnect);
+      res.removeListener("close", abortOnDisconnect);
+    }
+  };
+}
+
 app.get("/", (_req, res) => res.sendFile(path.join(__dirname, "index.html")));
 app.use(express.static(path.join(__dirname)));
 
@@ -53,6 +73,7 @@ app.post("/api/voice", async (req, res) => {
   if (!text) return res.status(400).json({ error: "Text is required for speech." });
   if (!apiKey || !voiceId) return res.status(503).json({ error: "ElevenLabs voice is not configured." });
 
+  const request = createRequestAbortController(req, res, 30_000);
   try {
     const modelName = process.env.ELEVENLABS_MODEL || "eleven_multilingual_v2";
     const upstream = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}?output_format=mp3_44100_128`, {
@@ -63,7 +84,7 @@ app.post("/api/voice", async (req, res) => {
         model_id: modelName,
         voice_settings: { stability: 0.6, similarity_boost: 0.75, style: 0.2, use_speaker_boost: true }
       }),
-      signal: AbortSignal.timeout(30_000)
+      signal: request.signal
     });
     if (!upstream.ok) {
       const result = await upstream.json().catch(() => ({}));
@@ -75,8 +96,11 @@ app.post("/api/voice", async (req, res) => {
     res.set("Cache-Control", "no-store");
     res.send(audio);
   } catch (error) {
+    if (req.aborted || res.destroyed) return;
     console.error("ElevenLabs TTS backend error:", error.message);
     res.status(502).json({ error: "Could not reach the voice service." });
+  } finally {
+    request.cleanup();
   }
 });
 
@@ -97,12 +121,13 @@ app.post("/api/chat", async (req, res) => {
     { role: "user", content: question }
   ];
 
+  const request = createRequestAbortController(req, res, 30_000);
   try {
     const upstream = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
       body: JSON.stringify({ model, messages, temperature: 0.4, max_tokens: 600 }),
-      signal: AbortSignal.timeout(30_000)
+      signal: request.signal
     });
     const result = await upstream.json().catch(() => ({}));
     if (!upstream.ok) {
@@ -113,8 +138,11 @@ app.post("/api/chat", async (req, res) => {
     if (!answer) return res.status(502).json({ error: "The AI service returned no answer. Please try again." });
     res.json({ answer });
   } catch (error) {
+    if (req.aborted || res.destroyed) return;
     console.error("Chat backend error:", error.message);
     res.status(502).json({ error: "Could not reach the AI service. Check your connection and try again." });
+  } finally {
+    request.cleanup();
   }
 });
 

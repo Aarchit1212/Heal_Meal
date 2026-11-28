@@ -4,24 +4,56 @@ class SpeechOutput {
         this.synthesis = window.speechSynthesis;
         this.audio = null;
         this.requestId = 0;
+        this.requestController = null;
+        this.activeUtterance = null;
+        this.isActive = false;
+        this.onActivityChange = null;
+    }
+
+    setActive(active) {
+        if (this.isActive === active) return;
+        this.isActive = active;
+        this.onActivityChange?.(active);
     }
 
     stop() {
+        this.requestId += 1;
+        this.requestController?.abort();
+        this.requestController = null;
         this.synthesis?.cancel();
         if (this.audio) {
             this.audio.pause();
             URL.revokeObjectURL(this.audio.src);
             this.audio = null;
         }
+        this.activeUtterance = null;
+        this.setActive(false);
     }
 
-    speakWithBrowser(text) {
-        if (!this.synthesis) return false;
+    speakWithBrowser(text, requestId) {
+        if (!this.synthesis || typeof SpeechSynthesisUtterance === "undefined") {
+            this.setActive(false);
+            return false;
+        }
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = "en-US";
         const voices = this.synthesis.getVoices();
         const voice = voices.find(v => v.lang === "en-IN") || voices.find(v => v.lang === "en-US") || voices[0];
         if (voice) utterance.voice = voice;
+        this.activeUtterance = utterance;
+        utterance.onstart = () => {
+            if (requestId === this.requestId) this.setActive(true);
+        };
+        utterance.onend = () => {
+            if (requestId !== this.requestId) return;
+            this.activeUtterance = null;
+            this.setActive(false);
+        };
+        utterance.onerror = () => {
+            if (requestId !== this.requestId) return;
+            this.activeUtterance = null;
+            this.setActive(false);
+        };
         this.synthesis.speak(utterance);
         return true;
     }
@@ -29,26 +61,46 @@ class SpeechOutput {
     async speak(text) {
         if (!text) return false;
         this.stop();
-        const requestId = ++this.requestId;
+        const requestId = this.requestId;
+        this.setActive(true);
+        const controller = new AbortController();
+        this.requestController = controller;
+        let browserFallbackStarted = false;
+        const fallbackToBrowser = () => {
+            if (browserFallbackStarted || requestId !== this.requestId) return false;
+            browserFallbackStarted = true;
+            return this.speakWithBrowser(text, requestId);
+        };
         try {
             const response = await fetch(`/api/voice`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ text })
+                body: JSON.stringify({ text }),
+                signal: controller.signal
             });
             if (!response.ok) throw new Error("ElevenLabs voice is unavailable");
             const blob = await response.blob();
             if (requestId !== this.requestId) return false;
-            this.audio = new Audio(URL.createObjectURL(blob));
-            this.audio.onended = () => {
-                URL.revokeObjectURL(this.audio.src);
-                this.audio = null;
+            const audio = new Audio(URL.createObjectURL(blob));
+            this.audio = audio;
+            audio.onended = () => {
+                URL.revokeObjectURL(audio.src);
+                if (this.audio === audio) this.audio = null;
+                if (requestId === this.requestId) this.setActive(false);
             };
-            await this.audio.play();
+            audio.onerror = () => {
+                URL.revokeObjectURL(audio.src);
+                if (this.audio === audio) this.audio = null;
+                fallbackToBrowser();
+            };
+            await audio.play();
             return true;
         } catch (error) {
+            if (requestId !== this.requestId) return false;
             console.warn("ElevenLabs voice unavailable; using the browser voice instead.", error);
-            return this.speakWithBrowser(text);
+            return fallbackToBrowser();
+        } finally {
+            if (this.requestController === controller) this.requestController = null;
         }
     }
 }

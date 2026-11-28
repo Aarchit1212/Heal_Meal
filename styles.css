@@ -579,6 +579,14 @@ body {
     background: var(--primary-dark);
 }
 
+.send-btn.is-stopping {
+    background: var(--danger);
+}
+
+.send-btn.is-stopping:hover {
+    background: #dc2626;
+}
+
 /* Meal Plan */
 .meal-controls {
     display: flex;

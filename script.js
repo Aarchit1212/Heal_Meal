@@ -15,6 +15,14 @@ class HealthCompanion {
         this.conversationHistory = JSON.parse(localStorage.getItem("healthvoice_history") || "[]");
         this.medicationReminders = new HealMealMedicationReminders();
         this.chatQueue = Promise.resolve();
+        this.chatGeneration = 0;
+        this.chatController = null;
+        this.chatTypingIndicators = new Set();
+        this.isSpeechActive = false;
+        this.rime.onActivityChange = active => {
+            this.isSpeechActive = active;
+            this.updateChatControl();
+        };
         this.voice.onResult = (transcript) => {
             const input = document.getElementById("voiceInput");
             if (input) input.value = transcript;
@@ -127,11 +135,23 @@ class HealthCompanion {
         const cleanQuery = query.trim();
         this.addMessage("user", cleanQuery);
         const typingIndicator = this.showTypingIndicator();
-        this.chatQueue = this.chatQueue.then(() => this.completeUserQuery(cleanQuery, typingIndicator));
+        this.chatTypingIndicators.add(typingIndicator);
+        this.updateChatControl();
+        const generation = this.chatGeneration;
+        this.chatQueue = this.chatQueue
+            .then(() => this.completeUserQuery(cleanQuery, typingIndicator, generation))
+            .catch(error => console.error("Chat queue failed:", error));
         return this.chatQueue;
     }
 
-    async completeUserQuery(cleanQuery, typingIndicator) {
+    async completeUserQuery(cleanQuery, typingIndicator, generation) {
+        if (generation !== this.chatGeneration) {
+            this.chatTypingIndicators.delete(typingIndicator);
+            return;
+        }
+
+        const controller = new AbortController();
+        this.chatController = controller;
         try {
             const response = await fetch(`${API_BASE}/chat`, {
                 method: "POST",
@@ -139,9 +159,11 @@ class HealthCompanion {
                 body: JSON.stringify({
                     question: cleanQuery,
                     history: this.conversationHistory.slice(-8)
-                })
+                }),
+                signal: controller.signal
             });
             const data = await response.json().catch(() => ({}));
+            if (generation !== this.chatGeneration) return;
             if (!response.ok) throw new Error(data.error || "The assistant could not answer right now.");
             const answer = data.answer;
             if (!answer) throw new Error("The assistant returned an empty response.");
@@ -151,11 +173,36 @@ class HealthCompanion {
             this.addMessage("assistant", answer, typingIndicator);
             this.rime.speak(HealMealMarkdownRenderer.toPlainText(answer));
         } catch (error) {
+            if (generation !== this.chatGeneration || error.name === "AbortError") return;
             console.error("Chat request failed:", error);
             const msg = error.message || "I couldn't connect to the assistant. Please try again.";
             this.addMessage("assistant", msg, typingIndicator);
             this.rime.speak(msg);
+        } finally {
+            this.chatTypingIndicators.delete(typingIndicator);
+            if (this.chatController === controller) this.chatController = null;
+            this.updateChatControl();
         }
+    }
+
+    stopChat() {
+        this.chatGeneration += 1;
+        this.chatController?.abort();
+        this.chatController = null;
+        for (const indicator of this.chatTypingIndicators) indicator?.remove();
+        this.chatTypingIndicators.clear();
+        this.rime.stop();
+        this.updateChatControl();
+    }
+
+    updateChatControl() {
+        const sendBtn = document.getElementById("sendBtn");
+        if (!sendBtn) return;
+        const isActive = this.chatTypingIndicators.size > 0 || this.isSpeechActive;
+        sendBtn.innerHTML = `<i class="fas fa-${isActive ? "stop" : "paper-plane"}" aria-hidden="true"></i>`;
+        sendBtn.setAttribute("aria-label", isActive ? "Stop response" : "Send question");
+        sendBtn.title = isActive ? "Stop response" : "Send question";
+        sendBtn.classList.toggle("is-stopping", isActive);
     }
 
     // ============================================
@@ -246,6 +293,10 @@ class HealthCompanion {
         const sendBtn = document.getElementById('sendBtn');
         if (sendBtn) {
             sendBtn.addEventListener('click', () => {
+                if (this.chatTypingIndicators.size > 0 || this.isSpeechActive) {
+                    this.stopChat();
+                    return;
+                }
                 const input = document.getElementById('voiceInput');
                 if (input && input.value.trim()) {
                     this.processUserQuery(input.value.trim());
@@ -315,6 +366,8 @@ class HealthCompanion {
                 setTimeout(() => this.voice.toggleListening(), 500);
             });
         }
+
+        this.updateChatControl();
     }
 
 }
