@@ -368,6 +368,23 @@ class HealthCompanion {
         }
 
         this.updateChatControl();
+        this.setupBackToTop();
+    }
+
+    setupBackToTop() {
+        const button = document.getElementById("backToTop");
+        if (!button) return;
+
+        const updateVisibility = () => {
+            button.hidden = window.scrollY < 400;
+        };
+
+        window.addEventListener("scroll", updateVisibility, { passive: true });
+        button.addEventListener("click", () => {
+            const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+            window.scrollTo({ top: 0, behavior });
+        });
+        updateVisibility();
     }
 
 }
